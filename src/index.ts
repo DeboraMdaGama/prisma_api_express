@@ -1,16 +1,29 @@
-import { PrismaClient } from '@prisma/client';
-import express from 'express';
+import express = require('express');
+import 'express-async-errors';
 
-const prisma = new PrismaClient()
-const app = express()
+import {router} from './routes';
 
-app.use(express.json())
+const app = express();
 
-app.get('/users', async (req, res) => {
-    const users = await prisma.user.findMany()
-    res.json(users)
-})
+app.use(express.json());
 
-app.listen(3000, () =>
-  console.log('REST API server ready at: http://localhost:3000'),
-)
+app.use(router);
+
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    if (err instanceof Error) {
+      return res.status(400).send({error: err.message});
+    }
+
+    return res
+      .status(500)
+      .send({status: 'error', message: 'Internal Server Error'});
+  },
+);
+
+app.listen(3000, () => console.log('REST API server ready at: http://localhost:3000'));
